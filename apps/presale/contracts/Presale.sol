@@ -8,8 +8,8 @@ import "@aragon/os/contracts/lib/math/SafeMath.sol";
 import "@aragon/os/contracts/lib/math/SafeMath64.sol";
 import "@aragon/os/contracts/lib/token/ERC20.sol";
 import "@aragon/apps-token-manager/contracts/TokenManager.sol";
-import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
-import "../../marketplace-controller/contracts/IMarketplaceController.sol";
+import "@1hive/apps-marketplace-shared-interfaces/contracts/IPresale.sol";
+import "@1hive/apps-marketplace-shared-interfaces/contracts/IMarketplaceController.sol";
 
 
 contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {

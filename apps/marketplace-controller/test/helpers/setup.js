@@ -1,7 +1,3 @@
-const EVMScriptRegistryFactory = artifacts.require('EVMScriptRegistryFactory')
-const DAOFactory = artifacts.require('DAOFactory')
-const Kernel = artifacts.require('Kernel')
-const ACL = artifacts.require('ACL')
 const TokenManager = artifacts.require('TokenManager')
 const MiniMeToken = artifacts.require('MiniMeToken')
 const Controller = artifacts.require('MarketplaceController')
@@ -10,7 +6,6 @@ const MarketMaker = artifacts.require('BancorMarketMaker')
 const Formula = artifacts.require('BancorFormula')
 const Agent = artifacts.require('Agent')
 const Vault = artifacts.require('Vault')
-const Tap = artifacts.require('Tap')
 const TokenMock = artifacts.require('TokenMock')
 
 const {
@@ -27,18 +22,13 @@ const {
   VIRTUAL_SUPPLIES,
   VIRTUAL_BALANCES,
   RESERVE_RATIOS,
-  SLIPPAGES,
   BUY_FEE_PCT,
   SELL_FEE_PCT,
-  RATES,
-  FLOORS,
-  BATCH_BLOCKS,
-  MAXIMUM_TAP_RATE_INCREASE_PCT,
-  MAXIMUM_TAP_FLOOR_DECREASE_PCT,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+
+const { newDao, installNewApp } = require('@aragon/contract-helpers-test/src/aragon-os')
 
 const { hash } = require('eth-ens-namehash')
-const getProxyAddress = require('@ablack/fundraising-shared-test-helpers/getProxyAddress')
 
 const setup = {
   ids: {
@@ -48,17 +38,8 @@ const setup = {
     marketMaker: hash('bancor-market-maker.aragonpm.eth'),
     agent: hash('agent.aragonpm.eth'),
     vault: hash('vault.aragonpm.eth'),
-    tap: hash('tap.aragonpm.eth'),
   },
   deploy: {
-    factory: async ctx => {
-      const kBase = await Kernel.new(true) // petrify immediately
-      const aBase = await ACL.new()
-      const rFact = await EVMScriptRegistryFactory.new()
-
-      ctx.factory = await DAOFactory.new(kBase.address, aBase.address, rFact.address)
-      ctx.roles.APP_MANAGER_ROLE = await kBase.APP_MANAGER_ROLE()
-    },
     base: async ctx => {
       ctx.base = ctx.base || {}
 
@@ -68,7 +49,6 @@ const setup = {
       ctx.base.marketMaker = await MarketMaker.new()
       ctx.base.reserve = await Agent.new()
       ctx.base.vault = await Vault.new()
-      ctx.base.tap = await Tap.new()
     },
     formula: async ctx => {
       ctx.formula = await Formula.new()
@@ -83,17 +63,14 @@ const setup = {
       ctx.collaterals.ant = await TokenMock.new(user, INITIAL_COLLATERAL_BALANCE)
     },
     dao: async (ctx, root) => {
-      const receipt = await ctx.factory.newDAO(root)
+      const { dao, acl } = await newDao(root)
 
-      ctx.dao = Kernel.at(receipt.logs.filter(l => l.event === 'DeployDAO')[0].args.dao)
-      ctx.acl = ACL.at(await ctx.dao.acl())
-
-      await ctx.acl.createPermission(root, ctx.dao.address, ctx.roles.APP_MANAGER_ROLE, root, { from: root })
+      ctx.dao = dao
+      ctx.acl = acl
     },
     infrastructure: async ctx => {
       ctx.roles = ctx.roles || {}
 
-      await setup.deploy.factory(ctx)
       await setup.deploy.base(ctx)
       await setup.deploy.formula(ctx)
     },
@@ -109,39 +86,22 @@ const setup = {
   },
   install: {
     controller: async (ctx, root) => {
-      const receipt = await ctx.dao.newAppInstance(setup.ids.controller, ctx.base.controller.address, '0x', false, { from: root })
-
-      ctx.controller = await Controller.at(getProxyAddress(receipt))
+      ctx.controller = await Controller.at(await installNewApp(ctx.dao, setup.ids.controller, ctx.base.controller.address, root))
     },
     tokenManager: async (ctx, root) => {
-      const receipt = await ctx.dao.newAppInstance(setup.ids.tokenManager, ctx.base.tokenManager.address, '0x', false, { from: root })
-
-      ctx.tokenManager = await TokenManager.at(getProxyAddress(receipt))
+      ctx.tokenManager = await TokenManager.at(await installNewApp(ctx.dao, setup.ids.tokenManager, ctx.base.tokenManager.address, root))
     },
     presale: async (ctx, root) => {
-      const receipt = await ctx.dao.newAppInstance(setup.ids.presale, ctx.base.presale.address, '0x', false, { from: root })
-
-      ctx.presale = await Presale.at(getProxyAddress(receipt))
+      ctx.presale = await Presale.at(await installNewApp(ctx.dao, setup.ids.presale, ctx.base.presale.address, root))
     },
     marketMaker: async (ctx, root) => {
-      const receipt = await ctx.dao.newAppInstance(setup.ids.marketMaker, ctx.base.marketMaker.address, '0x', false, { from: root })
-
-      ctx.marketMaker = await MarketMaker.at(getProxyAddress(receipt))
+      ctx.marketMaker = await MarketMaker.at(await installNewApp(ctx.dao, setup.ids.marketMaker, ctx.base.marketMaker.address, root))
     },
     reserve: async (ctx, root) => {
-      const receipt = await ctx.dao.newAppInstance(setup.ids.agent, ctx.base.reserve.address, '0x', false, { from: root })
-
-      ctx.reserve = await Agent.at(getProxyAddress(receipt))
+      ctx.reserve = await Agent.at(await installNewApp(ctx.dao, setup.ids.agent, ctx.base.reserve.address, root))
     },
     vault: async (ctx, root) => {
-      const receipt = await ctx.dao.newAppInstance(setup.ids.vault, ctx.base.vault.address, '0x', false, { from: root })
-
-      ctx.vault = await Vault.at(getProxyAddress(receipt))
-    },
-    tap: async (ctx, root) => {
-      const receipt = await ctx.dao.newAppInstance(setup.ids.tap, ctx.base.tap.address, '0x', false, { from: root })
-
-      ctx.tap = await Tap.at(getProxyAddress(receipt))
+      ctx.vault = await Vault.at(await installNewApp(ctx.dao, setup.ids.vault, ctx.base.vault.address, root))
     },
 
     all: async (ctx, root) => {
@@ -151,7 +111,6 @@ const setup = {
       await setup.install.marketMaker(ctx, root)
       await setup.install.reserve(ctx, root)
       await setup.install.vault(ctx, root)
-      await setup.install.tap(ctx, root)
     },
   },
   initialize: {
@@ -200,24 +159,12 @@ const setup = {
     vault: async (ctx, root) => {
       await ctx.vault.initialize({ from: root })
     },
-    tap: async (ctx, root) => {
-      await ctx.tap.initialize(
-        ctx.controller.address,
-        ctx.reserve.address,
-        ctx.vault.address,
-        BATCH_BLOCKS,
-        MAXIMUM_TAP_RATE_INCREASE_PCT,
-        MAXIMUM_TAP_FLOOR_DECREASE_PCT,
-        { from: root }
-      )
-    },
     all: async (ctx, root, user) => {
       await setup.initialize.tokenManager(ctx, root)
       await setup.initialize.vault(ctx, root)
       await setup.initialize.reserve(ctx, root)
       await setup.initialize.presale(ctx, root)
       await setup.initialize.marketMaker(ctx, root)
-      await setup.initialize.tap(ctx, root)
       await setup.initialize.controller(ctx, root)
     },
   },
@@ -286,32 +233,9 @@ const setup = {
       ctx.roles.reserve.TRANSFER_ROLE = await ctx.base.reserve.TRANSFER_ROLE()
 
       await ctx.acl.createPermission(ctx.marketMaker.address, ctx.reserve.address, ctx.roles.reserve.TRANSFER_ROLE, root, { from: root })
-      await ctx.acl.grantPermission(ctx.tap.address, ctx.reserve.address, ctx.roles.reserve.TRANSFER_ROLE, { from: root })
       await ctx.acl.createPermission(ctx.controller.address, ctx.reserve.address, ctx.roles.reserve.ADD_PROTECTED_TOKEN_ROLE, root, { from: root })
     },
     vault: async (ctx, root) => {},
-    tap: async (ctx, root) => {
-      ctx.roles.tap = ctx.roles.tap || {}
-      ctx.roles.tap.UPDATE_BENEFICIARY_ROLE = await ctx.base.tap.UPDATE_BENEFICIARY_ROLE()
-      ctx.roles.tap.ADD_TAPPED_TOKEN_ROLE = await ctx.base.tap.ADD_TAPPED_TOKEN_ROLE()
-      ctx.roles.tap.UPDATE_TAPPED_TOKEN_ROLE = await ctx.base.tap.UPDATE_TAPPED_TOKEN_ROLE()
-      ctx.roles.tap.RESET_TAPPED_TOKEN_ROLE = await ctx.base.tap.RESET_TAPPED_TOKEN_ROLE()
-      ctx.roles.tap.UPDATE_MAXIMUM_TAP_RATE_INCREASE_PCT_ROLE = await ctx.base.tap.UPDATE_MAXIMUM_TAP_RATE_INCREASE_PCT_ROLE()
-      ctx.roles.tap.UPDATE_MAXIMUM_TAP_FLOOR_DECREASE_PCT_ROLE = await ctx.base.tap.UPDATE_MAXIMUM_TAP_FLOOR_DECREASE_PCT_ROLE()
-      ctx.roles.tap.WITHDRAW_ROLE = await ctx.base.tap.WITHDRAW_ROLE()
-
-      await ctx.acl.createPermission(ctx.controller.address, ctx.tap.address, ctx.roles.tap.UPDATE_BENEFICIARY_ROLE, root, { from: root })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.tap.address, ctx.roles.tap.ADD_TAPPED_TOKEN_ROLE, root, { from: root })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.tap.address, ctx.roles.tap.RESET_TAPPED_TOKEN_ROLE, root, { from: root })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.tap.address, ctx.roles.tap.UPDATE_TAPPED_TOKEN_ROLE, root, { from: root })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.tap.address, ctx.roles.tap.UPDATE_MAXIMUM_TAP_RATE_INCREASE_PCT_ROLE, root, {
-        from: root,
-      })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.tap.address, ctx.roles.tap.UPDATE_MAXIMUM_TAP_FLOOR_DECREASE_PCT_ROLE, root, {
-        from: root,
-      })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.tap.address, ctx.roles.tap.WITHDRAW_ROLE, root, { from: root })
-    },
     all: async (ctx, root, user) => {
       await setup.setPermissions.controller(ctx, root, user)
       await setup.setPermissions.tokenManager(ctx, root)
@@ -319,7 +243,6 @@ const setup = {
       await setup.setPermissions.marketMaker(ctx, root)
       await setup.setPermissions.reserve(ctx, root)
       await setup.setPermissions.vault(ctx, root)
-      await setup.setPermissions.tap(ctx, root)
     },
   },
   setCollaterals: async (ctx, root, user) => {

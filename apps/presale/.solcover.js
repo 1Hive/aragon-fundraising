@@ -2,23 +2,26 @@ module.exports = {
   norpc: true,
   copyPackages: [
     '@aragon/os',
-    '@aragon/test-helpers',
-    '@aragon/apps-shared-migrations',
-    '@aragon/apps-shared-minime',
+    '@aragon/contract-helpers-test',
+    '@aragon/minime',
     '@aragon/apps-token-manager',
     '@aragon/apps-vault',
-    '@ablack/fundraising-shared-interfaces',
-    '@ablack/fundraising-shared-test-helpers',
+    '@1hive/apps-marketplace-shared-interfaces',
+    '@1hive/apps-marketplace-shared-test-helpers',
   ],
   skipFiles: [
     'test',
     '@aragon/os',
-    '@aragon/test-helpers',
-    '@aragon/apps-shared-migrations',
-    '@aragon/apps-shared-minime',
+    '@aragon/contract-helpers-test',
+    '@aragon/minime',
     '@aragon/apps-token-manager',
     '@aragon/apps-vault',
-    '@ablack/fundraising-shared-interfaces',
-    '@ablack/fundraising-shared-test-helpers',
+    '@1hive/apps-marketplace-shared-interfaces',
+    '@1hive/apps-marketplace-shared-test-helpers',
   ],
+  // https://github.com/sc-forks/solidity-coverage/blob/master/docs/advanced.md#skipping-tests
+  mocha: {
+    grep: "@skip-on-coverage", // Find everything with this tag
+    invert: true               // Run the grep's inverse set.
+  }
 }

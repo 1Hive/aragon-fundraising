@@ -1,24 +1,21 @@
-const { PRESALE_GOAL, PRESALE_EXCHANGE_RATE, RESERVE_RATIOS, PERCENT_SUPPLY_OFFERED, PPM } = require('@ablack/fundraising-shared-test-helpers/constants')
+const { PRESALE_EXCHANGE_RATE, PPM } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+const { bn } = require('@aragon/contract-helpers-test/src/numbers')
 
 const utils = {
   getEvent: (tx, eventName) => tx.logs.filter(log => log.event.includes(eventName))[0],
 
-  contributionToProjectTokens: value => {
-    return Math.floor(
-      web3
-        .toBigNumber(value)
-        .mul(utils.tokenExchangeRate())
-        .div(PPM)
-        .toNumber()
-    )
-  },
+  contributionToProjectTokens: value => 
+    value
+      .mul(bn(PRESALE_EXCHANGE_RATE))
+      .div(bn(PPM))
+  ,
 
   now: () => {
     return Math.floor(new Date().getTime() / 1000)
   },
 
   tokenExchangeRate: () => {
-    return PRESALE_EXCHANGE_RATE
+    return bn(PRESALE_EXCHANGE_RATE)
   },
 
   sendTransaction: data => {

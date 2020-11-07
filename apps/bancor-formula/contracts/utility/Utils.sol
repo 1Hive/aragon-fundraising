@@ -1,13 +1,15 @@
 pragma solidity 0.4.24;
 
+
 /*
     Utilities & Common Modifiers
 */
 contract Utils {
     /**
-        constructor
-    */
+     * constructor
+     */
     constructor() public {
+        // solium-disable-previous-line no-empty-blocks
     }
 
     // verifies that an amount is greater than zero

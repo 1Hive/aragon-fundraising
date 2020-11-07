@@ -5,13 +5,13 @@ const DAOFactory = artifacts.require('@aragon/core/contracts/factory/DAOFactory'
 const EVMScriptRegistryFactory = artifacts.require('@aragon/core/contracts/factory/EVMScriptRegistryFactory')
 const ACL = artifacts.require('@aragon/core/contracts/acl/ACL')
 const Kernel = artifacts.require('@aragon/core/contracts/kernel/Kernel')
-const MiniMeToken = artifacts.require('@aragon/apps-shared-minime/contracts/MiniMeToken')
-const ERC20 = artifacts.require('@aragon/core/contracts/lib/token/ERC20')
+const MiniMeToken = artifacts.require('@aragon/minime/contracts/MiniMeToken')
 
 const TokenManager = artifacts.require('TokenManager.sol')
 const Vault = artifacts.require('Vault.sol')
-const FundraisingController = artifacts.require('AragonFundraisingControllerMock.sol')
+const FundraisingController = artifacts.require('MarketplaceControllerMock.sol')
 const Presale = artifacts.require('PresaleMock.sol')
+
 
 const {
   ANY_ADDRESS,
@@ -23,10 +23,10 @@ const {
   VESTING_COMPLETE_PERIOD,
   PERCENT_SUPPLY_OFFERED,
   PERCENT_FUNDING_FOR_BENEFICIARY,
-  RESERVE_RATIOS,
-  BUY_FEE_PCT,
-  SELL_FEE_PCT,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+
+
+const { now } = require('./utils')
 
 const deploy = {
   getProxyAddress: receipt => receipt.logs.filter(l => l.event === 'NewAppProxy')[0].args.proxy,
@@ -38,8 +38,8 @@ const deploy = {
     const regFact = await EVMScriptRegistryFactory.new()
     const daoFact = await DAOFactory.new(kernelBase.address, aclBase.address, regFact.address)
     const daoReceipt = await daoFact.newDAO(daoManager)
-    test.dao = Kernel.at(daoReceipt.logs.filter(l => l.event === 'DeployDAO')[0].args.dao)
-    test.acl = ACL.at(await test.dao.acl())
+    test.dao = await Kernel.at(daoReceipt.logs.filter(l => l.event === 'DeployDAO')[0].args.dao)
+    test.acl = await ACL.at(await test.dao.acl())
     test.APP_MANAGER_ROLE = await kernelBase.APP_MANAGER_ROLE()
   },
   setDAOPermissions: async (test, daoManager) => {
@@ -50,7 +50,7 @@ const deploy = {
   deployReserve: async (test, appManager) => {
     const appBase = await Vault.new()
     const receipt = await test.dao.newAppInstance(hash('pool.aragonpm.eth'), appBase.address, '0x', false, { from: appManager })
-    test.reserve = Vault.at(deploy.getProxyAddress(receipt))
+    test.reserve = await Vault.at(deploy.getProxyAddress(receipt))
     test.RESERVE_TRANSFER_ROLE = await appBase.TRANSFER_ROLE()
     // test.RESERVE_ADD_PROTECTED_TOKEN_ROLE = await appBase.ADD_PROTECTED_TOKEN_ROLE()
   },
@@ -66,7 +66,7 @@ const deploy = {
   deployFundraising: async (test, appManager) => {
     const appBase = await FundraisingController.new()
     const receipt = await test.dao.newAppInstance(hash('fundraising-controller.aragonpm.eth'), appBase.address, '0x', false, { from: appManager })
-    test.fundraising = FundraisingController.at(deploy.getProxyAddress(receipt))
+    test.fundraising = await FundraisingController.at(deploy.getProxyAddress(receipt))
   },
   setFundraisingPermissions: async (test, appManager) => {},
   initializeFundraising: async test => {
@@ -77,7 +77,7 @@ const deploy = {
   deployVault: async (test, appManager) => {
     const appBase = await Vault.new()
     const receipt = await test.dao.newAppInstance(hash('vault.aragonpm.eth'), appBase.address, '0x', false, { from: appManager })
-    test.vault = Vault.at(deploy.getProxyAddress(receipt))
+    test.vault = await Vault.at(deploy.getProxyAddress(receipt))
   },
   setVaultPermissions: async (test, appManager) => {
     // No permissions
@@ -90,7 +90,7 @@ const deploy = {
   deployTokenManager: async (test, appManager) => {
     const appBase = await TokenManager.new()
     const receipt = await test.dao.newAppInstance(hash('token-manager.aragonpm.eth'), appBase.address, '0x', false, { from: appManager })
-    test.tokenManager = TokenManager.at(deploy.getProxyAddress(receipt))
+    test.tokenManager = await TokenManager.at(deploy.getProxyAddress(receipt))
     test.TOKEN_MANAGER_MINT_ROLE = await appBase.MINT_ROLE()
     test.TOKEN_MANAGER_ISSUE_ROLE = await appBase.ISSUE_ROLE()
     test.TOKEN_MANAGER_ASSIGN_ROLE = await appBase.ASSIGN_ROLE()
@@ -113,7 +113,7 @@ const deploy = {
   deployPresale: async (test, appManager) => {
     const appBase = await Presale.new()
     const receipt = await test.dao.newAppInstance(hash('presale.aragonpm.eth'), appBase.address, '0x', false, { from: appManager })
-    test.presale = Presale.at(deploy.getProxyAddress(receipt))
+    test.presale = await Presale.at(deploy.getProxyAddress(receipt))
     test.PRESALE_OPEN_ROLE = await appBase.OPEN_ROLE()
     test.PRESALE_CONTRIBUTE_ROLE = await appBase.CONTRIBUTE_ROLE()
   },
@@ -137,6 +137,7 @@ const deploy = {
       params.percentFundingForBeneficiary,
       params.startDate,
     ]
+    test.presale.mockSetTimestamp(now())
     return test.presale.initialize(...paramsArr)
   },
   defaultDeployParams: (test, beneficiary) => {

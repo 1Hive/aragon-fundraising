@@ -1,5 +1,6 @@
 pragma solidity 0.4.24;
 
+
 /*
     Library for basic math operations with overflow/underflow protection
 */

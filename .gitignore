@@ -10,6 +10,7 @@ yarn.lock
 package-lock.json
 **/**/yarn.lock
 **/**/package-lock.json
+yarn-error.log
 
 # coverage
 */**/coverage
@@ -17,6 +18,7 @@ package-lock.json
 */**/coverage.json
 */**/allFiredEvents
 */**/scTopics
+*/**/.coverage_*
 
 # truffle and aragon build artifacts
 */**/abi
@@ -24,6 +26,9 @@ package-lock.json
 */**/arapp_local.json
 */**/flattened_contracts
 */**/build
+*/**/cache
+*/**/artifacts
+*/**/dist
 
 # keep abis used in the frontend
 !apps/marketplace-controller/app/src/abi

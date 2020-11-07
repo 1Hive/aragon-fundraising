@@ -3,18 +3,16 @@ cache:
   timeout: 600
   directories:
     - node_modules
-    - fundraising/apps/marketplace-controller/node_modules
-    - fundraising/apps/bancor-formula/node_modules
-    - fundraising/apps/batched-bancor-market-maker/node_modules
-    - fundraising/apps/presale/node_modules
-    - fundraising/apps/tap/node_modules
-    - fundraising/shared/interfaces/node_modules
-    - fundraising/shared/test-helpers/node_modules
-    - fundraising/templates/multisig/node_modules
+    - apps/marketplace-controller/node_modules
+    - apps/bancor-formula/node_modules
+    - apps/bancor-market-maker/node_modules
+    - apps/presale/node_modules
+    - shared/interfaces/node_modules
+    - shared/test-helpers/node_modules
 notifications:
   email: false
 node_js:
-  - '8'
+  - '10'
 install:
   - travis_wait 60 npm install
 jobs:
@@ -23,24 +21,18 @@ jobs:
       script: npm run lint
       name: 'All'
     - stage: tests
-      script: npm run test:marketplace-controller
-      name: 'Aragon Fundraising'
-    - script: npm run test:batched-bancor-market-maker
-      name: 'Batched Bancor Market Maker'
+      script: npm run test:controller
+      name: 'Marketplace Controller'
+    - script: npm run test:bancor-market-maker
+      name: 'Bancor Market Maker'
     - script: npm run test:presale
       name: 'Presale'
-    - script: npm run test:tap
-      name: 'Tap'
-    - script: npm run test:multisig-template
-      name: 'Multisig Template'
     - stage: coverage
-      script: npm run coverage:marketplace-controller
-      name: 'Aragon Fundraising'
-    - script: npm run coverage:batched-bancor-market-maker
-      name: 'Batched Bancor Market Maker'
-    # - script: npm run coverage:presale
-    #   name: 'Presale'
-    - script: npm run coverage:tap
-      name: 'Tap'
+      script: npm run coverage:controller
+      name: 'Marketplace Controller'
+    - script: npm run coverage:bancor-market-maker
+      name: 'Bancor Market Maker'
+    - script: npm run coverage:presale
+      name: 'Presale'
 after_success:
   - ./node_modules/.bin/lcov-result-merger 'apps/*/coverage/lcov.info' | ./node_modules/.bin/coveralls

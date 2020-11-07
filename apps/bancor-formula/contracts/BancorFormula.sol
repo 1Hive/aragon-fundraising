@@ -1,13 +1,14 @@
 pragma solidity 0.4.24;
-import './interfaces/IBancorFormula.sol';
+import "@1hive/apps-marketplace-shared-interfaces/contracts/IBancorFormula.sol";
 import "@aragon/os/contracts/lib/math/SafeMath.sol";
-import './utility/Utils.sol';
+import "./utility/Utils.sol";
+
 
 contract BancorFormula is IBancorFormula, Utils {
     using SafeMath for uint256;
 
 
-    string public version = '0.3';
+    string public version = "0.3";
 
     uint256 private constant ONE = 1;
     uint32 private constant MAX_WEIGHT = 1000000;
@@ -38,6 +39,7 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     uint256[128] private maxExpArray;
     constructor() public {
+    // solium-disable whitespace
     //  maxExpArray[  0] = 0x6bffffffffffffffffffffffffffffffff;
     //  maxExpArray[  1] = 0x67ffffffffffffffffffffffffffffffff;
     //  maxExpArray[  2] = 0x637fffffffffffffffffffffffffffffff;
@@ -166,6 +168,7 @@ contract BancorFormula is IBancorFormula, Utils {
         maxExpArray[125] = 0x009131271922eaa6064b73a22d0bd4f2bf;
         maxExpArray[126] = 0x008b380f3558668c46c91c49a2f8e967b9;
         maxExpArray[127] = 0x00857ddf0117efa215952912839f6473e6;
+        // solium-enable whitespace
     }
 
     /**
@@ -182,7 +185,14 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @return purchase return amount
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) public view returns (uint256) {
+    function calculatePurchaseReturn(
+        uint256 _supply,
+        uint256 _connectorBalance,
+        uint32 _connectorWeight,
+        uint256 _depositAmount
+    )
+        public view returns (uint256)
+    {
         // validate input
         require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT);
 
@@ -216,7 +226,14 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @return sale return amount
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount) public view returns (uint256) {
+    function calculateSaleReturn(
+        uint256 _supply,
+        uint256 _connectorBalance,
+        uint32 _connectorWeight,
+        uint256 _sellAmount
+    )
+        public view returns (uint256)
+    {
         // validate input
         require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT && _sellAmount <= _supply);
 
@@ -256,13 +273,28 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @return second connector amount
     */
-    function calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) public view returns (uint256) {
+    function calculateCrossConnectorReturn(
+        uint256 _fromConnectorBalance,
+        uint32 _fromConnectorWeight,
+        uint256 _toConnectorBalance,
+        uint32 _toConnectorWeight,
+        uint256 _amount
+    )
+        public view returns (uint256)
+    {
         // validate input
-        require(_fromConnectorBalance > 0 && _fromConnectorWeight > 0 && _fromConnectorWeight <= MAX_WEIGHT && _toConnectorBalance > 0 && _toConnectorWeight > 0 && _toConnectorWeight <= MAX_WEIGHT);
+        require(
+            _fromConnectorBalance > 0 &&
+            _fromConnectorWeight > 0 &&
+            _fromConnectorWeight <= MAX_WEIGHT &&
+            _toConnectorBalance > 0 &&
+            _toConnectorWeight > 0 &&
+            _toConnectorWeight <= MAX_WEIGHT);
 
         // special case for equal weights
-        if (_fromConnectorWeight == _toConnectorWeight)
+        if (_fromConnectorWeight == _toConnectorWeight) {
             return _toConnectorBalance.mul(_amount) / _fromConnectorBalance.add(_amount);
+        }
 
         uint256 result;
         uint8 precision;
@@ -297,16 +329,14 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 base = _baseN * FIXED_1 / _baseD;
         if (base < OPT_LOG_MAX_VAL) {
             baseLog = optimalLog(base);
-        }
-        else {
+        } else {
             baseLog = generalLog(base);
         }
 
         uint256 baseLogTimesExp = baseLog * _expN / _expD;
         if (baseLogTimesExp < OPT_EXP_MAX_VAL) {
             return (optimalExp(baseLogTimesExp), MAX_PRECISION);
-        }
-        else {
+        } else {
             uint8 precision = findPositionInMaxExpArray(baseLogTimesExp);
             return (generalExp(baseLogTimesExp >> (MAX_PRECISION - precision), precision), precision);
         }
@@ -352,8 +382,7 @@ contract BancorFormula is IBancorFormula, Utils {
                 _n >>= 1;
                 res += 1;
             }
-        }
-        else {
+        } else {
             // Exactly 8 iterations
             for (uint8 s = 128; s > 0; s >>= 1) {
                 if (_n >= (ONE << s)) {
@@ -377,16 +406,19 @@ contract BancorFormula is IBancorFormula, Utils {
 
         while (lo + 1 < hi) {
             uint8 mid = (lo + hi) / 2;
-            if (maxExpArray[mid] >= _x)
+            if (maxExpArray[mid] >= _x) {
                 lo = mid;
-            else
+            } else {
                 hi = mid;
+            }
         }
 
-        if (maxExpArray[hi] >= _x)
+        if (maxExpArray[hi] >= _x) {
             return hi;
-        if (maxExpArray[lo] >= _x)
+        }
+        if (maxExpArray[lo] >= _x) {
             return lo;
+        }
 
         require(false);
         return 0;
@@ -457,6 +489,7 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 z;
         uint256 w;
 
+        // solium-disable max-len
         if (x >= 0xd3094c70f034de4b96ff7d5b6f99fcd8) {res += 0x40000000000000000000000000000000; x = x * FIXED_1 / 0xd3094c70f034de4b96ff7d5b6f99fcd8;} // add 1 / 2^1
         if (x >= 0xa45af1e1f40c333b3de1db4dd55f29a7) {res += 0x20000000000000000000000000000000; x = x * FIXED_1 / 0xa45af1e1f40c333b3de1db4dd55f29a7;} // add 1 / 2^2
         if (x >= 0x910b022db7ae67ce76b441c27035c6a1) {res += 0x10000000000000000000000000000000; x = x * FIXED_1 / 0x910b022db7ae67ce76b441c27035c6a1;} // add 1 / 2^3
@@ -476,6 +509,7 @@ contract BancorFormula is IBancorFormula, Utils {
         res += z * (0x08ba2e8ba2e8ba2e8ba2e8ba2e8ba2e8b - y) / 0x600000000000000000000000000000000; z = z * w / FIXED_1; // add y^11 / 11 - y^12 / 12
         res += z * (0x089d89d89d89d89d89d89d89d89d89d89 - y) / 0x700000000000000000000000000000000; z = z * w / FIXED_1; // add y^13 / 13 - y^14 / 14
         res += z * (0x088888888888888888888888888888888 - y) / 0x800000000000000000000000000000000;                      // add y^15 / 15 - y^16 / 16
+        // solium-enable max-len
 
         return res;
     }
@@ -519,13 +553,15 @@ contract BancorFormula is IBancorFormula, Utils {
         z = z * y / FIXED_1; res += z * 0x0000000000000001; // add y^20 * (20! / 20!)
         res = res / 0x21c3677c82b40000 + y + FIXED_1; // divide by 20! and then add y^1 / 1! + y^0 / 0!
 
-        if ((x & 0x010000000000000000000000000000000) != 0) res = res * 0x1c3d6a24ed82218787d624d3e5eba95f9 / 0x18ebef9eac820ae8682b9793ac6d1e776; // multiply by e^2^(-3)
-        if ((x & 0x020000000000000000000000000000000) != 0) res = res * 0x18ebef9eac820ae8682b9793ac6d1e778 / 0x1368b2fc6f9609fe7aceb46aa619baed4; // multiply by e^2^(-2)
-        if ((x & 0x040000000000000000000000000000000) != 0) res = res * 0x1368b2fc6f9609fe7aceb46aa619baed5 / 0x0bc5ab1b16779be3575bd8f0520a9f21f; // multiply by e^2^(-1)
-        if ((x & 0x080000000000000000000000000000000) != 0) res = res * 0x0bc5ab1b16779be3575bd8f0520a9f21e / 0x0454aaa8efe072e7f6ddbab84b40a55c9; // multiply by e^2^(+0)
-        if ((x & 0x100000000000000000000000000000000) != 0) res = res * 0x0454aaa8efe072e7f6ddbab84b40a55c5 / 0x00960aadc109e7a3bf4578099615711ea; // multiply by e^2^(+1)
-        if ((x & 0x200000000000000000000000000000000) != 0) res = res * 0x00960aadc109e7a3bf4578099615711d7 / 0x0002bf84208204f5977f9a8cf01fdce3d; // multiply by e^2^(+2)
-        if ((x & 0x400000000000000000000000000000000) != 0) res = res * 0x0002bf84208204f5977f9a8cf01fdc307 / 0x0000003c6ab775dd0b95b4cbee7e65d11; // multiply by e^2^(+3)
+        // solium-disable max-len
+        if ((x & 0x010000000000000000000000000000000) != 0) {res = res * 0x1c3d6a24ed82218787d624d3e5eba95f9 / 0x18ebef9eac820ae8682b9793ac6d1e776;} // multiply by e^2^(-3)
+        if ((x & 0x020000000000000000000000000000000) != 0) {res = res * 0x18ebef9eac820ae8682b9793ac6d1e778 / 0x1368b2fc6f9609fe7aceb46aa619baed4;} // multiply by e^2^(-2)
+        if ((x & 0x040000000000000000000000000000000) != 0) {res = res * 0x1368b2fc6f9609fe7aceb46aa619baed5 / 0x0bc5ab1b16779be3575bd8f0520a9f21f;} // multiply by e^2^(-1)
+        if ((x & 0x080000000000000000000000000000000) != 0) {res = res * 0x0bc5ab1b16779be3575bd8f0520a9f21e / 0x0454aaa8efe072e7f6ddbab84b40a55c9;} // multiply by e^2^(+0)
+        if ((x & 0x100000000000000000000000000000000) != 0) {res = res * 0x0454aaa8efe072e7f6ddbab84b40a55c5 / 0x00960aadc109e7a3bf4578099615711ea;} // multiply by e^2^(+1)
+        if ((x & 0x200000000000000000000000000000000) != 0) {res = res * 0x00960aadc109e7a3bf4578099615711d7 / 0x0002bf84208204f5977f9a8cf01fdce3d;} // multiply by e^2^(+2)
+        if ((x & 0x400000000000000000000000000000000) != 0) {res = res * 0x0002bf84208204f5977f9a8cf01fdc307 / 0x0000003c6ab775dd0b95b4cbee7e65d11;} // multiply by e^2^(+3)
+        // solium-enable max-len
 
         return res;
     }

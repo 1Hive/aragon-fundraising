@@ -4,15 +4,13 @@ const {
   VESTING_CLIFF_PERIOD,
   VESTING_COMPLETE_PERIOD,
   PRESALE_STATE,
-  CONNECTOR_WEIGHT,
-  TAP_RATE,
   PRESALE_PERIOD,
   ZERO_ADDRESS,
   PERCENT_FUNDING_FOR_BENEFICIARY,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, initializePresale, defaultDeployParams } = require('./common/deploy')
 const { tokenExchangeRate, now } = require('./common/utils')
-const { assertRevert } = require('@aragon/test-helpers/assertThrow')
+const { assertRevert, assertBn } = require('@aragon/contract-helpers-test/src/asserts')
 
 contract('Presale, setup', ([anyone, appManager, someEOA]) => {
   describe('When deploying the app with valid parameters', () => {
@@ -25,68 +23,68 @@ contract('Presale, setup', ([anyone, appManager, someEOA]) => {
       })
 
       it('App gets deployed', async () => {
-        expect(web3.isAddress(this.presale.address)).to.equal(true)
+        assert.isTrue(web3.utils.isAddress(this.presale.address))
       })
 
       it('Gas used is ~3.38e6', async () => {
         const gasUsed = presaleInitializationTx.receipt.gasUsed
-        expect(gasUsed).to.be.below(3.38e6)
+        assert.isTrue(gasUsed < 3.38e6)
       })
 
       it('Deploys fundraising related apps', async () => {
-        expect(web3.isAddress(this.reserve.address)).to.equal(true)
+        assert.isTrue(web3.utils.isAddress(this.reserve.address))
       })
 
       it('Controller is set', async () => {
-        expect(await this.presale.controller()).to.equal(this.fundraising.address)
+        assert.equal(await this.presale.controller(), this.fundraising.address)
       })
 
       it('startDate is set correctly', async () => {
-        expect((await this.presale.openDate()).toNumber()).to.equal(startDate)
+        assert.equal((await this.presale.openDate()).toNumber(), startDate)
       })
 
       it('Funding goal and percentage offered are set', async () => {
-        expect((await this.presale.goal()).toNumber()).to.equal(Number(PRESALE_GOAL))
-        expect((await this.presale.supplyOfferedPct()).toNumber()).to.equal(PERCENT_SUPPLY_OFFERED)
+        assert.equal((await this.presale.goal()).toNumber(), Number(PRESALE_GOAL))
+        assert.equal((await this.presale.supplyOfferedPct()).toNumber(), PERCENT_SUPPLY_OFFERED)
       })
 
       it('Dates and time periods are set', async () => {
-        expect((await this.presale.vestingCliffPeriod()).toNumber()).to.equal(VESTING_CLIFF_PERIOD)
-        expect((await this.presale.vestingCompletePeriod()).toNumber()).to.equal(VESTING_COMPLETE_PERIOD)
-        expect((await this.presale.period()).toNumber()).to.equal(PRESALE_PERIOD)
+        assert.equal((await this.presale.vestingCliffPeriod()).toNumber(), VESTING_CLIFF_PERIOD)
+        assert.equal((await this.presale.vestingCompletePeriod()).toNumber(), VESTING_COMPLETE_PERIOD)
+        assert.equal((await this.presale.period()).toNumber(), PRESALE_PERIOD)
       })
 
       it('Initial state is Pending', async () => {
-        expect((await this.presale.state()).toNumber()).to.equal(PRESALE_STATE.PENDING)
+        assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.PENDING)
       })
 
       it('Project token is deployed and set in the app', async () => {
-        expect(web3.isAddress(this.projectToken.address)).to.equal(true)
-        expect(await this.presale.token()).to.equal(this.projectToken.address)
+        assert.equal(web3.utils.isAddress(this.projectToken.address), true)
+        assert.equal(await this.presale.token(), this.projectToken.address)
       })
 
       it('Contribution token is deployed and set in the app', async () => {
-        expect(web3.isAddress(this.contributionToken.address)).to.equal(true)
-        expect(await this.presale.contributionToken()).to.equal(this.contributionToken.address)
+        assert.equal(web3.utils.isAddress(this.contributionToken.address), true)
+        assert.equal(await this.presale.contributionToken(), this.contributionToken.address)
       })
 
       it('TokenManager is deployed, set in the app, and controls the project token', async () => {
-        expect(web3.isAddress(this.tokenManager.address)).to.equal(true)
-        expect(await this.presale.tokenManager()).to.equal(this.tokenManager.address)
+        assert.equal(web3.utils.isAddress(this.tokenManager.address), true)
+        assert.equal(await this.presale.tokenManager(), this.tokenManager.address)
       })
 
       it('Exchange rate is calculated to the expected value', async () => {
-        const receivedValue = (await this.presale.exchangeRate()).toNumber()
+        const receivedValue = await this.presale.exchangeRate()
         const expectedValue = tokenExchangeRate()
-        expect(receivedValue).to.equal(expectedValue)
+        assertBn(receivedValue, expectedValue)
       })
 
       it('Beneficiary address is set', async () => {
-        expect(await this.presale.beneficiary()).to.equal(appManager)
+        assert.equal(await this.presale.beneficiary(), appManager)
       })
 
       it('Percent funding for beneficiary is set', async () => {
-        expect((await this.presale.fundingForBeneficiaryPct()).toNumber()).to.equal(PERCENT_FUNDING_FOR_BENEFICIARY)
+        assert.equal((await this.presale.fundingForBeneficiaryPct()).toNumber(), PERCENT_FUNDING_FOR_BENEFICIARY)
       })
     }
 

@@ -1,8 +1,8 @@
 {
   "environments": {
-    "default": {
+    "localhost": {
       "registry": "0x5f6f7e8cc7346a11ca2def8f827b7a0b612c56a1",
-      "appName": "marketplace-controller.open.aragonpm.eth",
+      "appName": "marketplace-controller.aragonpm.eth",
       "network": "rpc"
     },
     "mainnet": {
@@ -15,15 +15,10 @@
       "appName": "marketplace-controller.open.aragonpm.eth",
       "network": "rinkeby"
     },
-    "hatch": {
-      "registry": "0x98Df287B6C145399Aaa709692c8D308357bC085D",
-      "appName": "marketplace-controller.hatch.aragonpm.eth",
-      "network": "rinkeby"
-    },
-    "staging": {
-      "registry": "0xfe03625ea880a8cba336f9b5ad6e15b0a3b5a939",
+    "xdai": {
+      "registry": "0xaafca6b0c89521752e559650206d7c925fd0e530",
       "appName": "marketplace-controller.open.aragonpm.eth",
-      "network": "rinkeby"
+      "network": "xdai"
     }
   },
   "roles": [
@@ -78,12 +73,12 @@
     {
       "name": "Make buy orders",
       "id": "MAKE_BUY_ORDER_ROLE",
-      "params": []
+      "params": ["Buyer"]
     },
     {
       "name": "Make sell orders",
       "id": "MAKE_SELL_ORDER_ROLE",
-      "params": []
+      "params": ["Seller"]
     }
   ],
   "path": "contracts/MarketplaceController.sol"

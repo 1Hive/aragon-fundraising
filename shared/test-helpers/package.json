@@ -1,5 +1,5 @@
 {
-  "name": "@ablack/fundraising-shared-test-helpers",
+  "name": "@1hive/apps-marketplace-shared-test-helpers",
   "version": "1.0.0",
   "author": "Aragon Assocation <legal@aragon.org>",
   "contributors": [
@@ -13,9 +13,9 @@
     "*.js"
   ],
   "dependencies": {
-    "@ablack/fundraising-shared-interfaces": "^1.0.0",
+    "@1hive/apps-marketplace-shared-interfaces": "^1.0.0",
     "@aragon/os": "4.2.1",
-    "@aragon/test-helpers": "^2.0.0",
+    "@aragon/contract-helpers-test": "^0.1.0",
     "js-sha3": "^0.8.0"
   }
 }

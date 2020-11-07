@@ -1,7 +1,20 @@
 {
-  "name": "@1hive/marketplace",
+  "name": "@1hive/suite-marketplace",
   "version": "1.0.0",
   "private": true,
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "shared/*"
+    ],
+    "nohoist": [
+      "@aragon/os",
+      "@aragon/apps-*",
+      "@aragon/ppf-contracts",
+      "@aragon/contract-helpers-test",
+      "@1hive/apps-marketplace-*"
+    ]
+  },
   "author": "Aragon Assocation <legal@aragon.org>",
   "contributors": [
     "Olivier Sarrouy <olivier@aragon.black>",
@@ -14,26 +27,23 @@
   "homepage": "https://github.com/1Hive/marketplace-app",
   "scripts": {
     "install": "npm run bootstrap",
-    "bootstrap": "lerna bootstrap --concurrency 1 --hoist --nohoist=@aragon/os --nohoist=@aragon/apps-* --nohoist=@aragon/ppf-contracts --nohoist=@aragon/test-helpers --nohoist=@aragon/templates-shared --nohoist=@ablack/fundraising-*",
+    "bootstrap": "lerna bootstrap --concurrency 1",
     "fix": "rm -rfv **/websocket/.git",
     "update": "lernaupdate",
     "clean": "lerna clean",
-    "lint": "lerna run --scope=@ablack/fundraising-* lint",
+    "lint": "lerna run --scope=@1hive/apps-marketplace-* lint",
     "test": "npm run test:all",
-    "test:all": "lerna run --scope=@ablack/fundraising-* --concurrency=1 --stream test",
-    "test:all:gas": "lerna run --scope=@ablack/fundraising-* --concurrency=1 --stream test:gas",
-    "test:aragon-fundraising": "lerna run --scope=@ablack/fundraising-aragon-fundraising --stream test",
-    "test:batched-bancor-market-maker": "lerna run --scope=@ablack/fundraising-batched-bancor-market-maker --stream test",
-    "test:presale": "lerna run --scope=@ablack/fundraising-presale --stream test",
-    "test:tap": "lerna run --scope=@ablack/fundraising-tap --stream test",
-    "test:multisig-template": "lerna run --scope=@ablack/fundraising-templates-multisig --stream test",
+    "test:all": "lerna run --scope=@1hive/apps-marketplace-* --concurrency=1 --stream test",
+    "test:all:gas": "lerna run --scope=@1hive/apps-marketplace-* --concurrency=1 --stream test:gas",
+    "test:controller": "lerna run --scope=@1hive/apps-marketplace-controller --stream test",
+    "test:bancor-market-maker": "lerna run --scope=@1hive/apps-marketplace-bancor-market-maker --stream test",
+    "test:presale": "lerna run --scope=@1hive/apps-marketplace-presale --stream test",
     "coverage": "npm run coverage:all",
-    "coverage:all": "lerna run --scope=@ablack/fundraising-* --concurrency=1 --stream test:coverage",
-    "coverage:aragon-fundraising": "lerna run --scope=@ablack/fundraising-aragon-fundraising --stream test:coverage",
-    "coverage:batched-bancor-market-maker": "lerna run --scope=@ablack/fundraising-batched-bancor-market-maker --stream test:coverage",
-    "coverage:presale": "lerna run --scope=@ablack/fundraising-presale --stream test:coverage",
-    "coverage:tap": "lerna run --scope=@ablack/fundraising-tap --stream test:coverage",
-    "publish": "lerna run --scope=@ablack/fundraising-* --concurrency=1 --stream publish"
+    "coverage:all": "lerna run --scope=@1hive/apps-marketplace-* --concurrency=1 --stream coverage",
+    "coverage:controller": "lerna run --scope=@1hive/apps-marketplace-controller --stream coverage",
+    "coverage:bancor-market-maker": "lerna run --scope=@1hive/apps-marketplace-bancor-market-maker --stream coverage",
+    "coverage:presale": "lerna run --scope=@1hive/apps-marketplace-presale --stream coverage",
+    "publish": "lerna run --scope=@1hive/apps-marketplace-* --concurrency=1 --stream publish"
   },
   "devDependencies": {
     "coveralls": "^3.0.1",

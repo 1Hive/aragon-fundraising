@@ -1,6 +1,8 @@
-const { VESTING_CLIFF_PERIOD, VESTING_COMPLETE_PERIOD } = require('@ablack/fundraising-shared-test-helpers/constants')
+const { VESTING_CLIFF_PERIOD, VESTING_COMPLETE_PERIOD } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale } = require('./common/deploy')
 const { contributionToProjectTokens, now } = require('./common/utils')
+const { assertBn } = require('@aragon/contract-helpers-test/src/asserts')
+const { bn } = require('@aragon/contract-helpers-test/src/numbers')
 
 const BUYER_BALANCE = 20000
 
@@ -11,16 +13,17 @@ contract('Presale, vesting functionality', ([anyone, appManager, buyer]) => {
 
       before(async () => {
         await prepareDefaultSetup(this, appManager)
+        const _now = now()
         await initializePresale(this, { ...defaultDeployParams(this, appManager), startDate })
 
         await this.contributionToken.generateTokens(buyer, BUYER_BALANCE)
         await this.contributionToken.approve(this.presale.address, BUYER_BALANCE, { from: buyer })
 
         if (startDate == 0) {
-          startDate = now()
+          startDate = _now
           await this.presale.open({ from: appManager })
         }
-        await this.presale.mockSetTimestamp(startDate + 1)
+        this.presale.mockSetTimestamp(startDate + 1)
 
         await this.presale.contribute(buyer, BUYER_BALANCE, { from: buyer })
 
@@ -33,26 +36,26 @@ contract('Presale, vesting functionality', ([anyone, appManager, buyer]) => {
       })
 
       it('Token manager registers the correct vested amount', async () => {
-        const expectedAmount = contributionToProjectTokens(BUYER_BALANCE)
-        expect(vestedAmount.toNumber()).to.equal(expectedAmount)
+        const expectedAmount = contributionToProjectTokens(bn(BUYER_BALANCE))
+        assertBn(vestedAmount, expectedAmount)
       })
 
       it('Token manager registers the correct vesting start date', async () => {
-        expect(vestingStartDate.toNumber()).to.equal(startDate)
+        assert.equal(vestingStartDate.toNumber(), startDate)
       })
 
       it('Token manager registers the correct vesting cliff date', async () => {
         const cliffDate = startDate + VESTING_CLIFF_PERIOD
-        expect(vestingCliffDate.toNumber()).to.equal(cliffDate)
+        assert.equal(vestingCliffDate.toNumber(), cliffDate)
       })
 
       it('Token manager registers the correct vesting complete date', async () => {
         const completeDate = startDate + VESTING_COMPLETE_PERIOD
-        expect(vestingCompleteDate.toNumber()).to.equal(completeDate)
+        assert.equal(vestingCompleteDate.toNumber(), completeDate)
       })
 
       it('Token manager registers the vestings as revokable', async () => {
-        expect(vestingRevokable).to.equal(true)
+        assert.isTrue(vestingRevokable)
       })
     })
   }

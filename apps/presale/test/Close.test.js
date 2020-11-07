@@ -4,12 +4,12 @@ const {
   PERCENT_FUNDING_FOR_BENEFICIARY,
   PERCENT_SUPPLY_OFFERED,
   PPM,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale } = require('./common/deploy')
 const { getEvent, now } = require('./common/utils')
-const { assertRevert } = require('@aragon/test-helpers/assertThrow')
+const { assertRevert } = require('@aragon/contract-helpers-test/src/asserts')
 
-const assertExternalEvent = require('@ablack/fundraising-shared-test-helpers/assertExternalEvent')
+const assertExternalEvent = require('@1hive/apps-marketplace-shared-test-helpers/assertExternalEvent')
 
 const BUYER_BALANCE = 2 * PRESALE_GOAL
 
@@ -27,14 +27,14 @@ contract('Presale, close() functionality', ([anyone, appManager, buyer1]) => {
           startDate = now()
           await this.presale.open({ from: appManager })
         }
-        await this.presale.mockSetTimestamp(startDate + 1)
+        this.presale.mockSetTimestamp(startDate + 1)
 
         // Make a single purchase that reaches the funding goal
         await this.presale.contribute(buyer1, PRESALE_GOAL)
       })
 
       it('Sale state is GoalReached', async () => {
-        expect((await this.presale.state()).toNumber()).to.equal(PRESALE_STATE.GOAL_REACHED)
+        assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.GOAL_REACHED)
       })
 
       describe('When the sale is closed', () => {
@@ -45,25 +45,25 @@ contract('Presale, close() functionality', ([anyone, appManager, buyer1]) => {
         })
 
         it('Sale state is Closed', async () => {
-          expect((await this.presale.state()).toNumber()).to.equal(PRESALE_STATE.CLOSED)
+          assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.CLOSED)
         })
 
         it('Raised funds are transferred to the fundraising reserve and the beneficiary address', async () => {
-          expect((await this.contributionToken.balanceOf(this.presale.address)).toNumber()).to.equal(0)
+          assert.equal((await this.contributionToken.balanceOf(this.presale.address)).toNumber(), 0)
 
           const totalRaised = (await this.presale.totalRaised()).toNumber()
           const tokensForBeneficiary = Math.floor((totalRaised * PERCENT_FUNDING_FOR_BENEFICIARY) / PPM)
           const tokensForReserve = totalRaised - tokensForBeneficiary
           const reserve = await this.presale.reserve()
-          expect((await this.contributionToken.balanceOf(appManager)).toNumber()).to.equal(tokensForBeneficiary)
-          expect((await this.contributionToken.balanceOf(reserve)).toNumber()).to.equal(tokensForReserve)
+          assert.equal((await this.contributionToken.balanceOf(appManager)).toNumber(), tokensForBeneficiary)
+          assert.equal((await this.contributionToken.balanceOf(reserve)).toNumber(), tokensForReserve)
         })
 
         it('Tokens are minted to the beneficiary address', async () => {
           const supply = await this.projectToken.totalSupply()
           const balanceOfBeneficiary = await this.projectToken.balanceOf(appManager)
 
-          expect(parseInt(balanceOfBeneficiary.toNumber())).to.equal(parseInt(Math.floor(supply.toNumber() * (1 - PERCENT_SUPPLY_OFFERED / PPM))))
+          assert.equal(parseInt(balanceOfBeneficiary.toNumber()), parseInt(Math.floor(supply.toNumber() * (1 - PERCENT_SUPPLY_OFFERED / PPM))))
         })
 
         it('Continuous fundraising campaign is started', async () => {
@@ -75,7 +75,7 @@ contract('Presale, close() functionality', ([anyone, appManager, buyer1]) => {
         })
 
         it('Emitted a Close event', async () => {
-          expect(getEvent(closeReceipt, 'Close')).to.exist
+          assert.isTrue(!!getEvent(closeReceipt, 'Close'))
         })
       })
     })
